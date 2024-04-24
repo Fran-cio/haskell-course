@@ -4,6 +4,16 @@
 -- Different wines are made from different grapes, there are around 10000 varieties over the world!
 -- Create a type synonym called "Grape" for the different grape names as strings.
 -- Additionally, use this type synonym for the grapes: "Sangiovese", "Cabernet-sauvignon", "Merlot" and "Garnacha".
+type Grape = String
+
+grape1 :: Grape
+grape1 = "Sangiovese"
+grape2 :: Grape
+grape2 = "Cabernetsauvignon"
+grape3 :: Grape
+grape3 = "Merlot"
+grape4 :: Grape
+grape4 = "Garnacha"
 
 -- Question 2
 -- The most famous regions that export wine are located in France, Italy and Spain.
@@ -12,12 +22,33 @@
 -- Create a type synonym called "Region" for wine region given their country and region as a tuple of strings.
 -- Additionally, use this type synonym for the regions: Bordeaux in France, Tuscany in Italy and Rioja in Spain.
 
+type Region = (String, String)
+
+region1 :: Region
+region1 = ("France", "Bordeaux")
+
+region2 :: Region
+region2 = ("Italy", "Tuscany")
+
+region3 :: Region
+region3 = ("Spain", "Rioja")
+
 -- Question 3
 -- A wine is either one of three kinds, these are red, white or rose wine.
 -- Besides its kind, each wine also has a given alcohol level.
 -- Create a data type called "Kind" that represents these three kinds, with each capturing the level of alcohol.
 -- Additionally, use this data type for the examples: red wine with 14.5% alcohol, white wine with 13% alcohol 
 -- and Rose wine with 12% alcohol.
+
+data Kind = Kind { porcentajeAlcohol :: Float, color :: String} deriving (Show)
+
+wine1 :: Kind
+wine1 = Kind 14.5 "red"
+wine2 :: Kind
+wine2 = Kind 13 "white"
+wine3 :: Kind
+wine3 = Kind 12 "rose"
+
 
 -- Question 4
 -- In the world of wines, bottles display all of the above information for the consumer on its label.
@@ -34,6 +65,13 @@
 -- Bordeaux is known for its red wine, these are mainly a blend between Cabernet-sauvignon and Merlot.
 -- Create a Label for the wine "Le Petit Haut Lafitte" that has an alcohol percentage 13.5%.
 
+data Label = Label { grapes :: [Grape], region :: Region, kind :: Kind} deriving Show
+larrosaRose = Label [grape4] region3 (Kind 14 "Rose")
+castiglioni = Label [grape1] region2 (Kind 12.5 "Red")
+bordeaux = Label [grape3, grape2] region1 (Kind 13.5 "Red")
+
+lePetitHaitLafitte = Label{ grapes= [], region=("",""), kind = Kind {porcentajeAlcohol = 13.5, color=""}}
+
 -- Question 5
 -- Write a function `containsGrape` that takes a list of Labels and a Grape and returns a boolean.
 -- The function should check if the there exists a wine in the Label that contains this Grape.
@@ -41,3 +79,6 @@
 -- This is a test list for the `containsGrape` function with an grape that is not in the list.
 grapeList = [larrosaRose,castiglioni,lePetitHaitLafitte]
 newGrape = "Pinot Noir"
+
+containsGrape :: Grape -> [Label] -> Bool
+containsGrape g = any (elem g . grapes)
