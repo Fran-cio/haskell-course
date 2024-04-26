@@ -42,3 +42,42 @@ Using GHCi, like the "Maze" game, this game should look like this:
 *Main> solveForest testForest [GoForward, GoLeft , GoRight]
 "YOU'VE FOUND THE EXIT!!"
 -}
+{-# LANGUAGE BlockArguments #-}
+
+data Move where
+    GoLeft :: Move
+    GoRight :: Move
+    GoForward :: Move
+    deriving (Eq, Show)
+
+type Forest = [Move]
+type Stamina = Int
+type StateForest = (Stamina, Forest)
+data GameForest = GameForest {efford::Stamina, state::StateForest } deriving Show
+
+move :: GameForest -> Move -> GameForest
+move game mo = game {state = makeMove efford (state game) mo}
+    where
+        makeMove efford (actSta,fo:fos) mo = if fo == mo then (actSta - efford game,fos) else (actSta - efford game,fo:fos)
+
+
+testForest = [GoForward, GoRight, GoRight]
+
+showCurrentChoice :: StateForest -> String
+showCurrentChoice (sta,ma)
+    | null ma   = "Llegaste"
+    | sta < 0   = "Te cansaste de correr"
+    | otherwise = "Dale segui te queda " ++ show sta ++ " stamina todavia"
+
+solveForest :: GameForest -> [Move] -> String
+solveForest ga [] = showCurrentChoice (state ga)
+solveForest ga (mo:mos)
+    | corte ga  =   showCurrentChoice (state ga)
+    | otherwise =   solveForest (move ga mo) mos
+    where
+        corte ga =
+            case state ga of
+                (sta,_) | sta < 0   -> True
+                (_,[])              -> True
+                _                   -> False
+

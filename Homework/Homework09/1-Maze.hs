@@ -71,9 +71,9 @@ testMaze = [GoForward, GoRight, GoRight]
 
 showCurrentChoice :: Maze -> Move -> String
 showCurrentChoice (ma:mas) mo
-    | null (ma:mas) = "Llegaste"
-    | null mas = if ma == mo then "Llegaste" else "Guarda la pared"
-    | otherwise = if ma == mo then "Segui asi" else "Guarda la pared"
+    | null (ma:mas) || null mas && ma == mo = "Llegaste"
+    | ma /= mo                              = "Guarda la pared"
+    | otherwise                             = "Segui asi" 
 
 solveMaze :: Maze -> [Move] -> String
 solveMaze _ [] = "No te pensas mover?"
