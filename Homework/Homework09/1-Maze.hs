@@ -39,6 +39,8 @@ step-by-step just in case:
 1. Write two data types. One for the moves (Move) you can make, and another for the maze (Maze).
 (Use the example above to figure them out.)
 
+
+
 2. Write a function called "move" that takes a maze and a move and returns the maze after the move.
 
 3. Write a "testMaze" value of type "Maze" and test the "move" function in GHCi.
@@ -53,3 +55,28 @@ still need to make another choice.
 
 6. Adapt adapt "solveMaze" function to use "showCurrentChoice" and play with your new game using GHCi! :D
 -}
+ -- 1
+data Move where
+    GoLeft :: Move
+    GoRight :: Move
+    GoForward :: Move
+    deriving (Eq, Show)
+
+type Maze = [Move]
+
+move :: Maze -> Move -> Maze
+move (ma:mas) mo = if mo == ma then mas else ma:mas
+
+testMaze = [GoForward, GoRight, GoRight]
+
+showCurrentChoice :: Maze -> Move -> String
+showCurrentChoice (ma:mas) mo
+    | null (ma:mas) = "Llegaste"
+    | null mas = if ma == mo then "Llegaste" else "Guarda la pared"
+    | otherwise = if ma == mo then "Segui asi" else "Guarda la pared"
+
+solveMaze :: Maze -> [Move] -> String
+solveMaze _ [] = "No te pensas mover?"
+solveMaze [] (mo:mos) = showCurrentChoice [] mo
+solveMaze ma [mo] = showCurrentChoice ma mo
+solveMaze ma (mo:mos) = solveMaze (move ma mo) mos
