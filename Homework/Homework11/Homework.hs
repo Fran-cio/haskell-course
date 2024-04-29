@@ -20,7 +20,14 @@ and prints it to the terminal inside a string message.
 (hidden files are not included)
 -}
 
--- listFiles :: IO ()
+listFiles :: IO ()
+listFiles = do
+  listOfDirectories <- listDirectory "."
+  let cantidad = length listOfDirectories
+      directorios = foldr (\acc dir -> acc ++ " \n" ++ dir) "" listOfDirectories
+      mensajeSalida = "La cantidad de archvios es " ++ show cantidad ++ " y son: \n" ++ directorios
+  putStrLn mensajeSalida
+
 
 {-
 -- Question 2 --
@@ -29,8 +36,13 @@ to a file called msg.txt, and after that, it reads the text from the msg.txt
 file and prints it back. Use the writeFile and readFile functions.
 -}
 
--- createMsg :: IO ()
-
+createMsg :: IO ()
+createMsg = do
+  putStrLn "Pls enter a msg for my and for you:"
+  msg <- getLine
+  writeFile "msg.txt" msg
+  msg2 <- readFile "msg.txt"
+  putStrLn msg2
 
 {-
 -- Context for Questions 3 and 4 --
@@ -71,7 +83,14 @@ Use the getCPUTime :: IO Integer function to get the CPU time before and after t
 The CPU time here is given in picoseconds (which is 1/1000000000000th of a second).
 -}
 
--- timeIO :: IO a -> IO ()
+timeIO :: IO a -> IO ()
+timeIO a = do
+  time1 <- getCPUTime
+  _ <- a
+  time2 <- getCPUTime
+  let execTime = fromInteger (time2 - time1)/ (10^12 :: Double)
+  putStrLn $ "Elapsed time: " ++ show execTime ++ " seconds"
+
 
 
 {-
@@ -81,7 +100,22 @@ and compares the time all three algorithms take to produce the largest prime bef
 limit. Print the number and time to the standard output.
 -}
 
--- benchmark :: IO ()
+funcExect :: Integer -> (Integer -> [Integer]) -> IO Integer
+funcExect maxNum func = do
+  let max = last (func maxNum)
+  putStrLn $ "Max val " ++ show max
+  return max
+
+benchmark :: IO ()
+benchmark = do
+  primenum <- getLine
+  putStrLn "Funcion 1"
+  time1 <- timeIO (funcExect (read primenum) primes1)
+  putStrLn "Funcion 2"
+  time2 <- timeIO (funcExect (read primenum) primes2)
+  putStrLn "Funcion 3"
+  time3 <- timeIO (funcExect (read primenum) primes3)
+  putStrLn ""
 
 {-
  -- Question 5 -- EXTRA CREDITS -- (In case the previous ones were too easy)
@@ -103,3 +137,21 @@ Below you can see an example output of how such a structure looks like:
 HINT: You can use the function doesFileExist, which takes in a FilePath and returns
 True if the argument file exists and is not a directory, and False otherwise.
 -}
+
+getFileName :: FilePath -> String
+getFileName path = reverse $ takeWhile (/= '/') $ reverse path
+
+listCuestiones :: String -> Int -> Bool -> IO ()
+listCuestiones direct level isLast = do
+  isFile <- doesFileExist direct
+  let name = getFileName direct
+  if isFile then do
+    putStrLn $ (if level /= 0 then replicate level '\t'++ (if isLast then "└" else "├") ++ replicate (level + 3) '─' else "") ++ show name
+  else do
+    putStrLn $ (if level /= 0 then replicate level '\t'++ (if isLast then "└" else "├") ++ replicate (level + 3) '─' else "") ++ show name
+    listOfDirectories <- listDirectory direct
+    let lastDir = last listOfDirectories
+    mapM_ (\dir -> listCuestiones (direct++"/"++dir) (level + 1) (lastDir == dir)) listOfDirectories
+
+listCuestionesWrap :: String -> IO ()
+listCuestionesWrap direct = listCuestiones direct 0 False
