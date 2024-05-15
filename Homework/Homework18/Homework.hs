@@ -1,7 +1,7 @@
 {-# LANGUAGE InstanceSigs #-}
 
-import           Data.Functor
-import           Data.Semigroup (Sum (..))
+import Data.Functor
+import Data.Semigroup (Sum (..))
 
 ----------------------------------------------------------------------------------------------------
 ---------------------------------------- QUESTION 1 ------------------------------------------------
@@ -18,6 +18,10 @@ exampleRoseTree :: RoseTree Int
 exampleRoseTree = RoseNode 1 [RoseNode 2 [], RoseNode 3 [RoseNode 4 []]]
 
 -- TODO: Implement the Functor instance for RoseTree
+instance Functor RoseTree where
+  fmap :: (a -> b) -> RoseTree a -> RoseTree b
+  fmap f (RoseNode a []) = RoseNode (f a) []
+  fmap f (RoseNode a b) = RoseNode (f a) ((fmap . fmap) f b)
 
 -- Test it out:
 
@@ -63,6 +67,10 @@ Write the Functor instance for Item.
 
 -- TODO
 
+instance Functor Item where
+  fmap :: (a -> b) -> Item a -> Item b
+  fmap f (Item (str, Sum num)) = Item (str, Sum (f num))
+
 -- >>> fmap (*2) exampleItem
 -- Item {getItem = ("Phone",Sum {getSum = 100.0})}
 
@@ -76,7 +84,7 @@ Write a function that gives you all the items of the list for free (price = 0.0)
 -}
 
 giveForFree :: DBResponse -> DBResponse
-giveForFree = undefined -- TODO
+giveForFree = (fmap . fmap . fmap) (const 0) -- TODO
 
 -- >>> giveForFree dbResult
 -- Just [Item {getItem = ("Phone",Sum {getSum = 0.0})},Item {getItem = ("Glasses",Sum {getSum = 0.0})}]
@@ -88,7 +96,7 @@ Write a function that changes the products prices by applying a tax of 20%.
 -}
 
 applyTaxes :: DBResponse -> DBResponse
-applyTaxes = undefined -- TODO
+applyTaxes = (fmap . fmap . fmap) (* 1.2) -- TODO
 
 -- >>> applyTaxes dbResult
 -- Just [Item {getItem = ("Phone",Sum {getSum = 60.0})},Item {getItem = ("Glasses",Sum {getSum = 36.0})}]
@@ -101,7 +109,7 @@ goes from 0.0 to 1.0) to the price.
 -}
 
 markOnSale :: Double -> DBResponse -> DBResponse
-markOnSale perc = undefined -- TODO
+markOnSale perc = (fmap . fmap) (\(Item (x, Sum y)) -> Item (x ++ " (" ++ show (perc * 100) ++ "% Discount)", Sum (y * (1 - perc))))
 
 -- >>> markOnSale 0.3 dbResult
 -- Just [Item {getItem = ("Phone (30.0% Discount)",Sum {getSum = 35.0})},Item {getItem = ("Glasses (30.0% Discount)",Sum {getSum = 21.0})}]
@@ -114,10 +122,14 @@ as second argument.
 -}
 
 listItemsWithFinalPrice :: DBResponse -> Maybe ([String], Double)
-listItemsWithFinalPrice = undefined -- TODO
+listItemsWithFinalPrice = fmap (foldl (\(str, num) (Item (x, Sum a)) -> (str ++ [x], num + a)) ([], 0))
 
 -- >>> listItemsWithFinalPrice dbResult
+--
+--
 -- Just (["Phone","Glasses"],80.0)
 
 -- >>> listItemsWithFinalPrice . applyTaxes . markOnSale 0.3 $ dbResult
+--
+--
 -- Just (["Phone (30.0% Discount)","Glasses (30.0% Discount)"],67.2)
