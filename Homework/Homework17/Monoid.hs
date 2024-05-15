@@ -5,14 +5,33 @@
  - in the lesson.
  -}
 
-newtype All = All { getAll :: Bool } deriving (Show, Eq)
-newtype Any = Any { getAny :: Bool } deriving (Show, Eq)
+-- instance Monoid Bool where
+--   mempty = True
+--   mappend = (&&)
+--
+-- instance Monoid Bool where
+--   mempty = False
+--   mappend = (||)
+
+newtype All = All {getAll :: Bool} deriving (Show, Eq)
+instance Semigroup All where
+    (All a) <> (All b) = All (a && b)
+
+instance Monoid All where
+    mempty = All True
+
+newtype Any = Any {getAny :: Bool} deriving (Show, Eq)
+instance Semigroup Any where
+    (Any a) <> (Any b) = Any (a || b)
+
+instance Monoid Any where
+    mempty = Any False
 
 -- TODO: Define the Semigroup and Monoid instances for All and Any
 
 -- Test it out
 
---- >>> All True <> All False <> All True
+-- >>> All True <> All False <> All True
 -- All {getAll = False}
 
 --- >>> (All False <> All True) <> All True == All False <> (All True <> All True)
@@ -48,6 +67,11 @@ newtype Any = Any { getAny :: Bool } deriving (Show, Eq)
  -}
 
 newtype Log = Log [String] deriving (Show, Eq)
+instance Semigroup Log where
+    (Log a) <> (Log b) = Log (a ++ b)
+
+instance Monoid Log where
+    mempty = Log []
 
 -- TODO: Define the Semigroup and Monoid instances for Log
 
@@ -85,17 +109,22 @@ log3 = Log ["!"]
 - You could define a Config type and make it a Monoid, where mempty is a default configuration
 - and mappend overrides the configuration.
 -}
+data Config = Config {port :: Int, host :: String} deriving (Show, Eq)
 
-data Config = Config { port :: Int, host :: String } deriving (Show, Eq)
+instance Semigroup Config where
+    (Config a b) <> (Config c d) = Config (if c /= 8080 then c else a) (if d /= "localhost" then d else b)
+
+instance Monoid Config where
+    mempty = Config 8080 "localhost"
 
 -- TODO: Define the Semigroup and Monoid instances for Config
 
 -- Test it out
 
 c1, c2, c3 :: Config
-c1 = Config { port = 8080, host = "localhost" }
-c2 = Config { port = 3000, host = "localhost" }
-c3 = Config { port = 4000, host = "example.com" }
+c1 = Config{port = 8080, host = "localhost"}
+c2 = Config{port = 3000, host = "localhost"}
+c3 = Config{port = 4000, host = "example.com"}
 
 --- >>> c1 <> c2
 -- Config {port = 3000, host = "localhost"}
@@ -120,24 +149,44 @@ c3 = Config { port = 4000, host = "example.com" }
 
 --------------------------------------------------------------------------------------------
 ---------------------------------------- Emergency -----------------------------------------
-{-
- - Suppose you have a system that can raise emergencies of various severities.
- - We'll use the same `Severity` type as in the lesson, but now it's going to be part of the
- - `Emergency` type. The `Emergency` type has to contain:
-  - 1. A Severity
-  - 2. A description of the emergency
-  - 3. A flag indicating whether the emergency has been resolved
- - Once you define the type, make it a Monoid.
- -}
+-- --{True
+--  - Suppose you have a system that can raise emergencies of various severities.
+--  - We'll use the same `Severity` type as in the lesson, but now it's going to be part of the
+-- -- True
+--   - 1. A Severity
+--   - 2. A description of the emergency
+--   - 3. A flag indicating whether the emergency has been resolved
+--  - Once you define the type, make it a Monoid.
+--  --}
 
 data Severity = Low | Medium | High | Critical deriving (Show, Eq, Ord)
 
 -- TODO: Define the Semigroup and Monoid instances for Severity
 
+instance Semigroup Severity where
+  Critical <> _ = Critical
+  _ <> Critical = Critical
+  High <> _     = High
+  _ <> High     = High
+  Medium <> _   = Medium
+  _ <> Medium   = Medium
+  _ <> _        = Low
+
+instance Monoid Severity where
+  mempty = Low
+
 -- TODO: Define the Emergency type
+
+data Emergency = Emergency {severity :: Severity, description :: String, resolved :: All} deriving (Show, Eq)
+
 
 -- TODO: Define the Semigroup and Monoid instances for Emergency
 
+instance Semigroup Emergency where
+  (Emergency a b c) <> (Emergency d e f) = Emergency (a<>d) (b++e) (c <> f)
+
+instance Monoid Emergency where
+  mempty = Emergency Low "" (All True) 
 -- Test it out
 
 e1, e2, e3, e4 :: Emergency
@@ -145,6 +194,9 @@ e1 = Emergency Low "You left the lights on; " (All True)
 e2 = Emergency Medium "You might have left the stove on, but you're not sure; " (All False)
 e3 = Emergency High "The building is on fire; " (All True)
 e4 = Emergency Critical "You mother-in-law is coming over!; " (All False)
+
+
+
 
 --- >>> e1 <> e2
 -- Emergency {severity = Medium, description = "You left the lights on; You might have left the stove on, but you're not sure; ", resolved = All {getAll = False}}

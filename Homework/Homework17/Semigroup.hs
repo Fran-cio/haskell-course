@@ -20,6 +20,8 @@ l5 = 'w' :| "orld"
 -- Now, define a Semigroup instance for NonEmpty:
 
 --  TODO: Define the Semigroup instance for NonEmpty
+instance Semigroup (NonEmpty a) where
+  (a :| b) <> (c :| d) =  a :| (b ++ [c] ++ d) 
 
 -- Test it out
 
