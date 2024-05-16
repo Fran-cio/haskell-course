@@ -11,18 +11,17 @@ eDiv x y = Right (x / y)
 
 
 
---                                               ?
+--            Either String (Float -> Float) -> Either String Float -> Either String Float
 --                                               |
 result :: Either String Float --                 |
 result = (\x y z -> x * y + z) <$> (3 `eDiv` 2) <*> Right 2 <*> pure 4
 --                              |                            |_______________________________________________
 --                              |                                                                           |
---                              ?                                                                           |
+--      (Float -> Float) -> Either String Float -> Either String Float                                      |
 --                                                                                                          |
 --                                                   _______________________________________________________|
 --                                                  |
---                                                  ?
-
+--                                   pure :: Int -> Either String Int
 
 
 ----------------------------------------------------------------------------------------------------
@@ -36,15 +35,20 @@ result = (\x y z -> x * y + z) <$> (3 `eDiv` 2) <*> Right 2 <*> pure 4
 -- will output the string @Debugging@ if the Boolean value @debug@
 -- is 'True', and otherwise do nothing.
 when :: (Applicative f) => Bool -> f () -> f ()
-when p s  = undefined
+when p s
+  | p = s
+  | otherwise = pure ()
 
 -- The reverse of 'when'.
 unless            :: (Applicative f) => Bool -> f () -> f ()
-unless p s        =  undefined
+unless p s 
+  | not p = s
+  | otherwise = pure ()
 
 -- Like 'replicateM', but discards the result.
 replicateM_ :: (Applicative m) => Int -> m a -> m ()
-replicateM_ n action = undefined
+replicateM_ 0 _ = pure ()
+replicateM_ n action = action *> replicateM_ (n -1) action
 
 
 --------------------------------------------------------------------------------------------------------
